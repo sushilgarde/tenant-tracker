@@ -1,0 +1,2405 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#172554" />
+    <title>RentFlow — Tenant Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+      :root {
+        --navy: #172554;
+        --navy2: #1e3a8a;
+        --blue: #3157d5;
+        --blue-soft: #eef2ff;
+        --ink: #182238;
+        --muted: #738096;
+        --line: #e7ebf2;
+        --bg: #f5f7fb;
+        --white: #fff;
+        --green: #13845b;
+        --green-bg: #e8f7ef;
+        --amber: #a76508;
+        --amber-bg: #fff5df;
+        --red: #c13b46;
+        --red-bg: #fff0f0;
+        --shadow: 0 8px 28px rgba(26, 42, 79, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .app-shell {
+        min-height: 100vh;
+      }
+      .topbar {
+        height: 70px;
+        background: var(--navy);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 max(22px, calc((100vw - 1240px) / 2));
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        box-shadow: 0 4px 16px #17255422;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font:
+          800 19px Manrope,
+          sans-serif;
+        letter-spacing: -0.5px;
+      }
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #ffffff1c;
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+      }
+      .brand small {
+        display: block;
+        font: 500 11px "DM Sans";
+        color: #c8d4f3;
+        letter-spacing: 0.2px;
+        margin-top: 1px;
+      }
+      .top-actions {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+      }
+      .top-actions .btn {
+        background: #ffffff17;
+        color: white;
+        border-color: #ffffff24;
+      }
+      .layout {
+        max-width: 1240px;
+        margin: auto;
+        padding: 28px 22px 100px;
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 26px;
+      }
+      .sidebar {
+        position: sticky;
+        top: 94px;
+        height: max-content;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+      }
+      .nav-label {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        color: #9aa5b6;
+        padding: 13px 12px 7px;
+        text-transform: uppercase;
+      }
+      .nav-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        border: 0;
+        background: transparent;
+        color: #657188;
+        padding: 12px;
+        border-radius: 11px;
+        text-align: left;
+        font-weight: 700;
+        margin: 2px 0;
+      }
+      .nav-btn .ico {
+        width: 22px;
+        text-align: center;
+        font-size: 17px;
+      }
+      .nav-btn.active {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+      .main {
+        min-width: 0;
+      }
+      .page-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin: 0 0 22px;
+      }
+      .eyebrow {
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.25px;
+        margin-bottom: 7px;
+      }
+      .page-head h1 {
+        font: 800 clamp(23px, 3vw, 30px) Manrope;
+        margin: 0;
+        letter-spacing: -1px;
+      }
+      .sub {
+        color: var(--muted);
+        margin-top: 6px;
+        font-size: 13px;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #34415a;
+        padding: 10px 14px;
+        border-radius: 11px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: 0.18s;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 14px #18223812;
+      }
+      .btn.primary {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+      .btn.dark {
+        background: var(--navy);
+        border-color: var(--navy);
+        color: #fff;
+      }
+      .btn.ghost {
+        background: transparent;
+      }
+      .btn.danger {
+        color: var(--red);
+        border-color: #f2d2d5;
+      }
+      .btn.small {
+        padding: 7px 10px;
+        font-size: 12px;
+        border-radius: 9px;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 13px;
+        margin-bottom: 18px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 17px 18px;
+        box-shadow: var(--shadow);
+        min-width: 0;
+      }
+      .stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .stat-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        display: grid;
+        place-items: center;
+        font-size: 17px;
+      }
+      .stat-value {
+        font: 800 clamp(20px, 2.4vw, 27px) Manrope;
+        margin-top: 12px;
+        letter-spacing: -0.8px;
+        overflow-wrap: anywhere;
+      }
+      .stat-foot {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .green {
+        color: var(--green) !important;
+      }
+      .red {
+        color: var(--red) !important;
+      }
+      .amber {
+        color: var(--amber) !important;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        box-shadow: var(--shadow);
+        margin-bottom: 17px;
+        overflow: hidden;
+      }
+      .panel-head {
+        padding: 17px 19px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .panel-head h2 {
+        font: 800 15px Manrope;
+        margin: 0;
+      }
+      .panel-body {
+        padding: 18px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .field label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #5e6b80;
+      }
+      .field input,
+      .field select,
+      .field textarea,
+      .control {
+        width: 100%;
+        border: 1px solid #dfe5ee;
+        background: #fff;
+        border-radius: 10px;
+        padding: 11px 12px;
+        color: var(--ink);
+        outline: none;
+        min-width: 0;
+      }
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        border-color: #7890ee;
+        box-shadow: 0 0 0 3px #3157d51a;
+      }
+      .field textarea {
+        resize: vertical;
+        min-height: 75px;
+      }
+      .filters {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .filters .field {
+        min-width: 130px;
+      }
+      .progress {
+        height: 9px;
+        background: #f0f2f7;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 12px;
+      }
+      .progress > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #3157d5, #6d85ed);
+        border-radius: 20px;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+      }
+      .tenant-row {
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        border-bottom: 1px solid #f0f2f6;
+      }
+      .tenant-row:last-child {
+        border: 0;
+      }
+      .avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        background: #edf1ff;
+        color: #3157d5;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        flex: none;
+      }
+      .tenant-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .tenant-info strong {
+        display: block;
+        font-size: 13px;
+      }
+      .tenant-info small {
+        display: block;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .row-end {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .amount {
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border-radius: 30px;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .pill.paid {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .pill.partial {
+        background: var(--amber-bg);
+        color: var(--amber);
+      }
+      .pill.due {
+        background: var(--red-bg);
+        color: var(--red);
+      }
+      .pill.neutral {
+        background: #eff2f6;
+        color: #647087;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 17px;
+      }
+      .empty {
+        text-align: center;
+        padding: 34px 18px;
+        color: var(--muted);
+      }
+      .empty b {
+        display: block;
+        color: var(--ink);
+        margin: 8px 0 4px;
+      }
+      .table-wrap {
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 720px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 12px 13px;
+        border-bottom: 1px solid #edf0f5;
+        font-size: 12px;
+      }
+      th {
+        background: #fafbfe;
+        color: #758197;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        position: sticky;
+        top: 0;
+      }
+      td strong {
+        font-size: 12px;
+      }
+      .matrix td {
+        text-align: center;
+        min-width: 75px;
+      }
+      .matrix td:first-child,
+      .matrix th:first-child {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 2;
+        text-align: left;
+        min-width: 180px;
+      }
+      .matrix th:first-child {
+        background: #fafbfe;
+        z-index: 3;
+      }
+      .month-cell {
+        border: 0;
+        border-radius: 8px;
+        padding: 7px 5px;
+        font-size: 10px;
+        font-weight: 800;
+        width: 100%;
+      }
+      .month-cell.paid {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .month-cell.partial {
+        background: var(--amber-bg);
+        color: var(--amber);
+      }
+      .month-cell.due {
+        background: var(--red-bg);
+        color: var(--red);
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .tenant-card {
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 16px;
+        background: #fff;
+      }
+      .tenant-card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .tenant-card h3 {
+        margin: 0;
+        font: 800 14px Manrope;
+      }
+      .tenant-card .unit {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .detail-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 12px;
+        margin-top: 12px;
+        border-top: 1px solid #f0f2f6;
+        font-size: 12px;
+      }
+      .detail-line span:first-child {
+        color: var(--muted);
+      }
+      .card-actions {
+        display: flex;
+        gap: 7px;
+        margin-top: 14px;
+      }
+      .card-actions .btn {
+        flex: 1;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: #101a32a8;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+      }
+      .modal {
+        background: #fff;
+        width: min(560px, 100%);
+        max-height: 92vh;
+        overflow: auto;
+        border-radius: 19px;
+        box-shadow: 0 25px 80px #0003;
+      }
+      .modal-head {
+        padding: 19px 21px;
+        background: var(--navy);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-head h2 {
+        font: 800 17px Manrope;
+        margin: 0;
+      }
+      .modal-content {
+        padding: 20px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 13px;
+      }
+      .form-grid .wide {
+        grid-column: 1/-1;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 9px;
+        padding: 0 20px 20px;
+      }
+      .mobile-nav {
+        display: none;
+      }
+      .notice {
+        background: #f0f5ff;
+        border: 1px solid #dce6ff;
+        color: #40568d;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+      }
+      .receipt-paper {
+        max-width: 720px;
+        margin: 0 auto;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 30px;
+      }
+      .receipt-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--navy);
+      }
+      .receipt-brand {
+        font: 800 22px Manrope;
+        color: var(--navy);
+      }
+      .receipt-kicker {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--muted);
+        font-weight: 800;
+      }
+      .receipt-meta {
+        text-align: right;
+        font-size: 12px;
+        line-height: 1.7;
+        color: #5e6b80;
+      }
+      .receipt-section {
+        padding: 18px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .receipt-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .receipt-grid small {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        margin-bottom: 4px;
+      }
+      .receipt-grid b {
+        font-size: 13px;
+      }
+      .receipt-table {
+        width: 100%;
+        min-width: 0;
+        margin-top: 8px;
+      }
+      .receipt-table td,
+      .receipt-table th {
+        padding: 11px 7px;
+      }
+      .receipt-table td:last-child,
+      .receipt-table th:last-child {
+        text-align: right;
+      }
+      .receipt-total {
+        margin: 17px 0 0 auto;
+        width: min(300px, 100%);
+      }
+      .receipt-total div {
+        display: flex;
+        justify-content: space-between;
+        padding: 7px 0;
+        font-size: 12px;
+      }
+      .receipt-total .grand {
+        border-top: 2px solid var(--navy);
+        font-size: 16px;
+        font-weight: 800;
+        margin-top: 6px;
+        padding-top: 12px;
+      }
+      .receipt-note {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 20px;
+      }
+      .receipt-sign {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 45px;
+        font-size: 11px;
+        color: #66738a;
+      }
+      .toast {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        background: #172554;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 11px;
+        box-shadow: var(--shadow);
+        z-index: 100;
+        font-weight: 700;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .hide {
+        display: none !important;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+          max-width: 760px;
+          padding: 22px 17px 100px;
+        }
+        .sidebar {
+          display: none;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .topbar {
+          padding: 0 17px;
+        }
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        .topbar {
+          height: 62px;
+          padding: 0 14px;
+        }
+        .brand {
+          font-size: 16px;
+        }
+        .brand-mark {
+          width: 34px;
+          height: 34px;
+        }
+        .top-actions .btn .btn-label {
+          display: none;
+        }
+        .top-actions .btn {
+          padding: 9px 11px;
+        }
+        .layout {
+          padding: 18px 13px 95px;
+        }
+        .page-head {
+          align-items: flex-start;
+          margin-bottom: 17px;
+        }
+        .page-head .btn {
+          padding: 9px 11px;
+          font-size: 12px;
+        }
+        .stats {
+          gap: 9px;
+        }
+        .stat {
+          padding: 13px;
+          border-radius: 14px;
+        }
+        .stat-top {
+          font-size: 9px;
+          letter-spacing: 0.3px;
+        }
+        .stat-icon {
+          width: 29px;
+          height: 29px;
+        }
+        .stat-value {
+          font-size: 21px;
+          margin-top: 9px;
+        }
+        .stat-foot {
+          font-size: 10px;
+        }
+        .panel {
+          border-radius: 14px;
+        }
+        .panel-head {
+          padding: 14px;
+        }
+        .panel-body {
+          padding: 14px;
+        }
+        .tenant-row {
+          padding: 12px 13px;
+          gap: 10px;
+        }
+        .tenant-row .row-end {
+          gap: 5px;
+        }
+        .tenant-row .row-end .btn {
+          padding: 7px;
+        }
+        .tenant-row .row-end .amount {
+          font-size: 11px;
+        }
+        .tenant-row .tenant-info strong {
+          font-size: 12px;
+        }
+        .cards {
+          grid-template-columns: 1fr;
+        }
+        .form-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .mobile-nav {
+          display: flex;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 30;
+          background: #fff;
+          border-top: 1px solid var(--line);
+          padding: 7px 5px max(7px, env(safe-area-inset-bottom));
+          justify-content: space-around;
+          box-shadow: 0 -5px 20px #1822380c;
+        }
+        .mobile-nav button {
+          border: 0;
+          background: transparent;
+          color: #7b879b;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+          font-size: 9px;
+          font-weight: 800;
+          padding: 5px 8px;
+          border-radius: 9px;
+        }
+        .mobile-nav button span:first-child {
+          font-size: 18px;
+        }
+        .mobile-nav button.active {
+          color: var(--blue);
+          background: var(--blue-soft);
+        }
+        .filters {
+          width: 100%;
+        }
+        .filters .field {
+          flex: 1;
+          min-width: calc(50% - 8px);
+        }
+        .receipt-paper {
+          padding: 18px;
+          border-radius: 10px;
+        }
+        .receipt-brand {
+          font-size: 18px;
+        }
+        .receipt-meta {
+          font-size: 10px;
+        }
+        .receipt-grid {
+          gap: 13px;
+        }
+        .receipt-table td,
+        .receipt-table th {
+          font-size: 10px;
+          padding: 9px 4px;
+        }
+        .receipt-total {
+          width: 100%;
+        }
+        .receipt-sign {
+          margin-top: 35px;
+        }
+        .receipt-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .receipt-actions .btn {
+          flex: 1;
+        }
+        .modal-backdrop {
+          padding: 0;
+          align-items: flex-end;
+        }
+        .modal {
+          border-radius: 19px 19px 0 0;
+          max-height: 94vh;
+        }
+        .modal-content {
+          padding: 16px;
+        }
+        .modal-head {
+          padding: 16px;
+        }
+        .modal-actions {
+          padding: 0 16px 18px;
+        }
+        .page-head h1 {
+          font-size: 23px;
+        }
+        .toolbar .btn {
+          font-size: 11px;
+        }
+      }
+      @media print {
+        body {
+          background: #fff;
+        }
+        .topbar,
+        .sidebar,
+        .mobile-nav,
+        .page-head,
+        .receipt-actions,
+        .no-print {
+          display: none !important;
+        }
+        .layout {
+          display: block;
+          padding: 0;
+          margin: 0;
+          max-width: none;
+        }
+        .main {
+          width: 100%;
+        }
+        #receiptView {
+          display: block !important;
+        }
+        .receipt-paper {
+          border: 0;
+          box-shadow: none;
+          border-radius: 0;
+          max-width: none;
+          padding: 12mm;
+        }
+        .receipt-sign {
+          break-inside: avoid;
+        }
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">⌂</div>
+          <div>RentFlow <small>PROPERTY & TENANT MANAGER</small></div>
+        </div>
+        <div class="top-actions">
+          <button class="btn" @click="exportData">
+            ↓ <span class="btn-label">Backup</span>
+          </button>
+          <button class="btn" @click="$refs.importFile.click()">
+            ↑ <span class="btn-label">Restore</span>
+          </button>
+          <input
+            ref="importFile"
+            type="file"
+            accept="application/json,.json"
+            class="hide"
+            @change="importData"
+          />
+        </div>
+      </header>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="nav-label">Workspace</div>
+          <button
+            v-for="n in nav"
+            :key="n.id"
+            class="nav-btn"
+            :class="{active:tab===n.id}"
+            @click="tab=n.id"
+          >
+            <span class="ico">{{n.icon}}</span>{{n.label}}
+          </button>
+          <div class="nav-label">Data</div>
+          <button class="nav-btn" @click="showSettings=true">
+            <span class="ico">⚙</span>Receipt settings
+          </button>
+          <button class="nav-btn" @click="exportData">
+            <span class="ico">⇩</span>Export backup
+          </button>
+        </aside>
+        <main class="main">
+          <section v-if="tab==='dashboard'">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">Overview</div>
+                <h1>Good {{greeting}}, landlord.</h1>
+                <div class="sub">Here's how your property is performing.</div>
+              </div>
+              <button class="btn primary" @click="openTenant()">
+                ＋ Add tenant
+              </button>
+            </div>
+            <div class="filters" style="margin-bottom: 15px">
+              <div class="field">
+                <label>REPORTING MONTH</label
+                ><select v-model.number="month">
+                  <option v-for="(m,i) in months" :value="i+1">{{m}}</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>YEAR</label
+                ><input
+                  type="number"
+                  v-model.number="year"
+                  min="2000"
+                  max="2100"
+                />
+              </div>
+            </div>
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-top">
+                  Expected rent <span class="stat-icon">₹</span>
+                </div>
+                <div class="stat-value">{{money(monthStats.expected)}}</div>
+                <div class="stat-foot">
+                  {{activeTenants.length}} active tenants
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">
+                  Collected <span class="stat-icon">↗</span>
+                </div>
+                <div class="stat-value green">
+                  {{money(monthStats.collected)}}
+                </div>
+                <div class="stat-foot">
+                  {{monthStats.percent}}% collection rate
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">
+                  Outstanding <span class="stat-icon">!</span>
+                </div>
+                <div class="stat-value red">
+                  {{money(monthStats.outstanding)}}
+                </div>
+                <div class="stat-foot">
+                  {{monthStats.pendingCount}} tenants with balance
+                </div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">
+                  Deposits held <span class="stat-icon">◇</span>
+                </div>
+                <div class="stat-value amber">{{money(depositsHeld)}}</div>
+                <div class="stat-foot">Security deposits received</div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-body">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 12px;
+                    align-items: center;
+                  "
+                >
+                  <div>
+                    <b style="font-size: 13px">Monthly collection progress</b>
+                    <div class="sub">{{months[month-1]}} {{year}}</div>
+                  </div>
+                  <b class="green">{{monthStats.percent}}%</b>
+                </div>
+                <div class="progress">
+                  <span :style="{width:monthStats.percent+'%'}"></span>
+                </div>
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="panel">
+                <div class="panel-head">
+                  <h2>Rent collection</h2>
+                  <button class="btn small" @click="tab='ledger'">
+                    View ledger →
+                  </button>
+                </div>
+                <div class="list">
+                  <div
+                    v-for="t in activeTenants"
+                    :key="t.id"
+                    class="tenant-row"
+                  >
+                    <div class="avatar">{{initials(t.name)}}</div>
+                    <div class="tenant-info">
+                      <strong>{{t.name}}</strong
+                      ><small
+                        >Unit {{t.unit}} · {{money(t.rentAmount)}} /
+                        month</small
+                      >
+                    </div>
+                    <div class="row-end">
+                      <span
+                        class="pill"
+                        :class="statusClass(monthRecord(t.id,month,year).paid,t.rentAmount)"
+                        >{{statusLabel(monthRecord(t.id,month,year).paid,t.rentAmount)}}</span
+                      ><button
+                        class="btn small"
+                        @click="openPayment(t,month,year)"
+                      >
+                        ＋
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="!activeTenants.length" class="empty">
+                    ⌂<b>No tenants yet</b>Add your first tenant to get started.
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h2>Quick actions</h2></div>
+                <div class="panel-body" style="display: grid; gap: 9px">
+                  <button
+                    class="btn"
+                    style="justify-content: flex-start"
+                    @click="openTenant()"
+                  >
+                    ＋ Add a new tenant
+                  </button>
+                  <button
+                    class="btn"
+                    style="justify-content: flex-start"
+                    @click="tab='receipts'"
+                  >
+                    ▤ Generate monthly receipt
+                  </button>
+                  <button
+                    class="btn"
+                    style="justify-content: flex-start"
+                    @click="tab='deposits'"
+                  >
+                    ◇ Manage security deposits
+                  </button>
+                  <div class="notice" style="margin: 4px 0 0">
+                    Tip: Record each tenant's monthly payment to keep the
+                    ledger, outstanding balance and receipts accurate.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="tab==='tenants'">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">People & units</div>
+                <h1>Tenants</h1>
+                <div class="sub">
+                  Manage tenant profiles, rent and security deposits.
+                </div>
+              </div>
+              <button class="btn primary" @click="openTenant()">
+                ＋ Add tenant
+              </button>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h2>
+                  Tenant directory
+                  <span class="muted">({{activeTenants.length}})</span>
+                </h2>
+                <input
+                  class="control"
+                  style="max-width: 230px"
+                  v-model="tenantSearch"
+                  placeholder="Search name, unit or phone…"
+                />
+              </div>
+              <div class="panel-body">
+                <div class="cards">
+                  <article
+                    class="tenant-card"
+                    v-for="t in filteredTenants"
+                    :key="t.id"
+                  >
+                    <div class="tenant-card-top">
+                      <div style="display: flex; gap: 10px">
+                        <div class="avatar">{{initials(t.name)}}</div>
+                        <div>
+                          <h3>{{t.name}}</h3>
+                          <div class="unit">
+                            Unit {{t.unit}} · {{t.phone||'No phone'}}
+                          </div>
+                        </div>
+                      </div>
+                      <span class="pill neutral"
+                        >{{t.active===false?'Past':'Active'}}</span
+                      >
+                    </div>
+                    <div class="detail-line">
+                      <span>Monthly rent</span
+                      ><b class="green">{{money(t.rentAmount)}}</b>
+                    </div>
+                    <div class="detail-line">
+                      <span>Security deposit</span
+                      ><b>{{money(t.depositAmount)}}</b>
+                    </div>
+                    <div class="detail-line">
+                      <span>Move-in date</span><b>{{t.moveInDate||'—'}}</b>
+                    </div>
+                    <div class="card-actions">
+                      <button class="btn small" @click="openTenant(t)">
+                        Edit</button
+                      ><button
+                        class="btn small"
+                        @click="tab='receipts';receiptTenant=t.id"
+                      >
+                        Receipt</button
+                      ><button
+                        class="btn small danger"
+                        @click="toggleTenant(t)"
+                      >
+                        {{t.active===false?'Reactivate':'Archive'}}
+                      </button>
+                    </div>
+                  </article>
+                </div>
+                <div v-if="!filteredTenants.length" class="empty">
+                  ♙<b>No tenants found</b>Try another search or add a tenant.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="tab==='ledger'">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">Payment history</div>
+                <h1>Rent ledger</h1>
+                <div class="sub">
+                  Select a month to review or record rent payments.
+                </div>
+              </div>
+              <button class="btn primary" @click="tab='receipts'">
+                ▤ Receipts
+              </button>
+            </div>
+            <div class="panel">
+              <div class="panel-body">
+                <div class="filters">
+                  <div class="field">
+                    <label>MONTH</label
+                    ><select v-model.number="month">
+                      <option v-for="(m,i) in months" :value="i+1">
+                        {{m}}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>YEAR</label
+                    ><input type="number" v-model.number="year" />
+                  </div>
+                  <div class="field" style="flex: 1">
+                    <label>SEARCH TENANT</label
+                    ><input v-model="tenantSearch" placeholder="Name or unit" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h2>{{months[month-1]}} {{year}} · Payment status</h2>
+                <span class="muted">{{activeTenants.length}} tenants</span>
+              </div>
+              <div class="list">
+                <div
+                  v-for="t in filteredTenants.filter(x=>x.active!==false)"
+                  :key="t.id"
+                  class="tenant-row"
+                >
+                  <div class="avatar">{{initials(t.name)}}</div>
+                  <div class="tenant-info">
+                    <strong>{{t.name}} · Unit {{t.unit}}</strong
+                    ><small
+                      >Rent {{money(t.rentAmount)}} · Paid
+                      {{money(monthRecord(t.id,month,year).paid)}} · Due
+                      {{money(Math.max(0,t.rentAmount-monthRecord(t.id,month,year).paid))}}</small
+                    >
+                  </div>
+                  <div class="row-end">
+                    <span
+                      class="pill"
+                      :class="statusClass(monthRecord(t.id,month,year).paid,t.rentAmount)"
+                      >{{statusLabel(monthRecord(t.id,month,year).paid,t.rentAmount)}}</span
+                    ><button
+                      class="btn small primary"
+                      @click="openPayment(t,month,year)"
+                    >
+                      Record
+                    </button>
+                  </div>
+                </div>
+                <div v-if="!activeTenants.length" class="empty">
+                  No tenants to show.
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Yearly rent matrix</h2>
+                <div class="field" style="max-width: 110px">
+                  <input type="number" v-model.number="matrixYear" />
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="matrix">
+                  <thead>
+                    <tr>
+                      <th>Tenant / unit</th>
+                      <th v-for="m in months">{{m.slice(0,3)}}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="t in activeTenants">
+                      <td>
+                        <strong>{{t.name}}</strong><br /><span class="muted"
+                          >Unit {{t.unit}}</span
+                        >
+                      </td>
+                      <td v-for="(m,i) in months">
+                        <button
+                          class="month-cell"
+                          :class="statusClass(monthRecord(t.id,i+1,matrixYear).paid,t.rentAmount)"
+                          @click="openPayment(t,i+1,matrixYear)"
+                        >
+                          {{statusShort(monthRecord(t.id,i+1,matrixYear).paid,t.rentAmount)}}<br />{{moneyShort(monthRecord(t.id,i+1,matrixYear).paid)}}
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="tab==='deposits'">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">Security & refunds</div>
+                <h1>Deposits</h1>
+                <div class="sub">
+                  Track security deposit received and refunded for each tenant.
+                </div>
+              </div>
+            </div>
+            <div class="stats" style="grid-template-columns: repeat(2, 1fr)">
+              <div class="stat">
+                <div class="stat-top">
+                  Deposits received <span class="stat-icon">₹</span>
+                </div>
+                <div class="stat-value green">{{money(depositsHeld)}}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-top">
+                  Deposits pending <span class="stat-icon">◷</span>
+                </div>
+                <div class="stat-value amber">{{money(depositsPending)}}</div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Deposit register</h2></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Tenant</th>
+                      <th>Unit</th>
+                      <th>Deposit expected</th>
+                      <th>Received</th>
+                      <th>Balance</th>
+                      <th>Update received</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="t in tenants">
+                      <td><strong>{{t.name}}</strong></td>
+                      <td>{{t.unit}}</td>
+                      <td>{{money(t.depositAmount)}}</td>
+                      <td>{{money(t.depositReceived||0)}}</td>
+                      <td>
+                        <b
+                          :class="t.depositAmount-(t.depositReceived||0)>0?'red':'green'"
+                          >{{money(Math.max(0,t.depositAmount-(t.depositReceived||0)))}}</b
+                        >
+                      </td>
+                      <td>
+                        <button class="btn small" @click="openDeposit(t)">
+                          Update
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="!tenants.length">
+                      <td colspan="6" class="empty">No tenants added.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="tab==='receipts'" id="receiptView">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">Tenant documents</div>
+                <h1>Monthly rent receipt</h1>
+                <div class="sub">
+                  Generate a printable receipt with previous balance and
+                  remaining amount.
+                </div>
+              </div>
+            </div>
+            <div class="panel no-print">
+              <div class="panel-body">
+                <div class="filters">
+                  <div class="field" style="flex: 2; min-width: 180px">
+                    <label>TENANT</label
+                    ><select v-model="receiptTenant">
+                      <option value="">Select tenant</option>
+                      <option v-for="t in tenants" :value="t.id">
+                        {{t.name}} · {{t.unit}}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>MONTH</label
+                    ><select v-model.number="receiptMonth">
+                      <option v-for="(m,i) in months" :value="i+1">
+                        {{m}}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>YEAR</label
+                    ><input type="number" v-model.number="receiptYear" />
+                  </div>
+                </div>
+                <div class="toolbar" style="margin-top: 14px">
+                  <button
+                    class="btn primary"
+                    :disabled="!selectedReceiptTenant"
+                    @click="printReceipt"
+                  >
+                    ▤ Print / Save PDF</button
+                  ><button
+                    class="btn"
+                    :disabled="!selectedReceiptTenant"
+                    @click="tab='ledger';month=receiptMonth;year=receiptYear"
+                  >
+                    Edit payment
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div v-if="selectedReceiptTenant" class="receipt-paper">
+              <div class="receipt-top">
+                <div>
+                  <div class="receipt-kicker">Rent payment receipt</div>
+                  <div class="receipt-brand">
+                    {{settings.landlordName||'Property Owner'}}
+                  </div>
+                  <div
+                    class="muted"
+                    style="
+                      font-size: 11px;
+                      margin-top: 5px;
+                      white-space: pre-line;
+                    "
+                  >
+                    {{settings.address}}
+                  </div>
+                  <div class="muted" style="font-size: 11px">
+                    {{settings.phone}}
+                  </div>
+                </div>
+                <div class="receipt-meta">
+                  <b>RECEIPT</b><br />No. {{receiptNumber}}<br />Issued:
+                  {{today}}<br />Period: {{months[receiptMonth-1]}}
+                  {{receiptYear}}
+                </div>
+              </div>
+              <div class="receipt-section">
+                <div class="receipt-grid">
+                  <div>
+                    <small>RECEIVED FROM</small
+                    ><b>{{selectedReceiptTenant.name}}</b>
+                  </div>
+                  <div>
+                    <small>UNIT / PROPERTY</small
+                    ><b>{{selectedReceiptTenant.unit}}</b>
+                  </div>
+                  <div>
+                    <small>CONTACT</small
+                    ><b>{{selectedReceiptTenant.phone||'—'}}</b>
+                  </div>
+                  <div>
+                    <small>PAYMENT DATE</small
+                    ><b
+                      >{{monthRecord(selectedReceiptTenant.id,receiptMonth,receiptYear).date||'—'}}</b
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="receipt-section">
+                <table class="receipt-table">
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Previous outstanding balance</td>
+                      <td>{{money(receiptFigures.opening)}}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        Rent for {{months[receiptMonth-1]}} {{receiptYear}}
+                      </td>
+                      <td>{{money(receiptFigures.rent)}}</td>
+                    </tr>
+                    <tr>
+                      <td><b>Total amount due</b></td>
+                      <td><b>{{money(receiptFigures.totalDue)}}</b></td>
+                    </tr>
+                    <tr>
+                      <td>Payment received this month</td>
+                      <td class="green">
+                        <b>− {{money(receiptFigures.paid)}}</b>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="receipt-total">
+                  <div>
+                    <span>Amount received</span
+                    ><b class="green">{{money(receiptFigures.paid)}}</b>
+                  </div>
+                  <div class="grand">
+                    <span>Balance payable</span
+                    ><span :class="receiptFigures.closing>0?'red':'green'"
+                      >{{money(receiptFigures.closing)}}</span
+                    >
+                  </div>
+                </div>
+                <div class="receipt-note">
+                  Payment method:
+                  {{monthRecord(selectedReceiptTenant.id,receiptMonth,receiptYear).method||'Not
+                  specified'}}<br />Reference / note:
+                  {{monthRecord(selectedReceiptTenant.id,receiptMonth,receiptYear).notes||'—'}}
+                </div>
+              </div>
+              <div class="receipt-sign">
+                <span>Thank you for your payment.</span
+                ><span>Authorized signature: __________________</span>
+              </div>
+            </div>
+            <div v-else class="panel">
+              <div class="empty">
+                ▤<b>Select a tenant to generate a receipt</b>Choose a tenant,
+                month and year above.
+              </div>
+            </div>
+            <div
+              class="receipt-actions no-print"
+              v-if="selectedReceiptTenant"
+              style="justify-content: flex-end; margin-top: 12px"
+            >
+              <button class="btn primary" @click="printReceipt">
+                Print receipt / Save as PDF
+              </button>
+            </div>
+          </section>
+        </main>
+      </div>
+      <nav class="mobile-nav">
+        <button v-for="n in nav" :class="{active:tab===n.id}" @click="tab=n.id">
+          <span>{{n.icon}}</span>{{n.label}}
+        </button>
+      </nav>
+
+      <!-- Tenant modal -->
+      <div
+        v-if="tenantModal"
+        class="modal-backdrop"
+        @click.self="tenantModal=false"
+      >
+        <div class="modal">
+          <div class="modal-head">
+            <h2>{{tenantEditId?'Edit tenant':'Add tenant'}}</h2>
+            <button class="btn small" @click="tenantModal=false">✕</button>
+          </div>
+          <div class="modal-content">
+            <div class="form-grid">
+              <div class="field wide">
+                <label>FULL NAME *</label
+                ><input
+                  v-model.trim="tenantForm.name"
+                  placeholder="Tenant full name"
+                />
+              </div>
+              <div class="field">
+                <label>UNIT / ROOM *</label
+                ><input v-model.trim="tenantForm.unit" placeholder="e.g. 101" />
+              </div>
+              <div class="field">
+                <label>PHONE</label
+                ><input
+                  v-model.trim="tenantForm.phone"
+                  inputmode="tel"
+                  placeholder="Mobile number"
+                />
+              </div>
+              <div class="field">
+                <label>MONTHLY RENT (₹) *</label
+                ><input
+                  type="number"
+                  min="0"
+                  v-model.number="tenantForm.rentAmount"
+                />
+              </div>
+              <div class="field">
+                <label>SECURITY DEPOSIT (₹)</label
+                ><input
+                  type="number"
+                  min="0"
+                  v-model.number="tenantForm.depositAmount"
+                />
+              </div>
+              <div class="field">
+                <label>MOVE-IN DATE</label
+                ><input type="date" v-model="tenantForm.moveInDate" />
+              </div>
+              <div class="field">
+                <label>DEPOSIT RECEIVED (₹)</label
+                ><input
+                  type="number"
+                  min="0"
+                  v-model.number="tenantForm.depositReceived"
+                />
+              </div>
+              <div class="field wide">
+                <label>NOTES</label
+                ><textarea
+                  v-model="tenantForm.notes"
+                  placeholder="Optional tenant notes"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" @click="tenantModal=false">Cancel</button
+            ><button class="btn primary" @click="saveTenant">
+              Save tenant
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment modal -->
+      <div
+        v-if="paymentModal"
+        class="modal-backdrop"
+        @click.self="paymentModal=false"
+      >
+        <div class="modal">
+          <div class="modal-head">
+            <div>
+              <h2>Record rent payment</h2>
+              <div style="font-size: 11px; color: #c8d4f3; margin-top: 4px">
+                {{paymentTarget?.name}} · {{months[paymentMonth-1]}}
+                {{paymentYear}}
+              </div>
+            </div>
+            <button class="btn small" @click="paymentModal=false">✕</button>
+          </div>
+          <div class="modal-content">
+            <div class="notice">
+              Monthly rent: <b>{{money(paymentTarget?.rentAmount||0)}}</b> ·
+              Existing payment: <b>{{money(paymentForm.paid)}}</b>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label>AMOUNT RECEIVED (₹)</label
+                ><input
+                  type="number"
+                  min="0"
+                  v-model.number="paymentForm.paid"
+                />
+              </div>
+              <div class="field">
+                <label>PAYMENT DATE</label
+                ><input type="date" v-model="paymentForm.date" />
+              </div>
+              <div class="field">
+                <label>PAYMENT METHOD</label
+                ><select v-model="paymentForm.method">
+                  <option>UPI</option>
+                  <option>Cash</option>
+                  <option>Bank Transfer</option>
+                  <option>Cheque</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>REFERENCE / TRANSACTION ID</label
+                ><input
+                  v-model.trim="paymentForm.reference"
+                  placeholder="Optional"
+                />
+              </div>
+              <div class="field wide">
+                <label>NOTES</label
+                ><textarea
+                  v-model="paymentForm.notes"
+                  placeholder="Optional notes"
+                ></textarea>
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                padding: 13px;
+                background: #f7f8fc;
+                border-radius: 11px;
+                margin-top: 15px;
+              "
+            >
+              <span class="muted">Current month balance</span
+              ><b class="red"
+                >{{money(Math.max(0,(paymentTarget?.rentAmount||0)-Number(paymentForm.paid||0)))}}</b
+              >
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" @click="paymentModal=false">Cancel</button
+            ><button class="btn primary" @click="savePayment">
+              Save payment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deposit modal -->
+      <div
+        v-if="depositModal"
+        class="modal-backdrop"
+        @click.self="depositModal=false"
+      >
+        <div class="modal">
+          <div class="modal-head">
+            <h2>Update security deposit</h2>
+            <button class="btn small" @click="depositModal=false">✕</button>
+          </div>
+          <div class="modal-content">
+            <div class="notice">
+              {{depositTarget?.name}} · Expected deposit
+              {{money(depositTarget?.depositAmount||0)}}
+            </div>
+            <div class="field">
+              <label>TOTAL DEPOSIT RECEIVED (₹)</label
+              ><input
+                type="number"
+                min="0"
+                v-model.number="depositReceivedForm"
+              />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" @click="depositModal=false">Cancel</button
+            ><button class="btn primary" @click="saveDeposit">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Receipt settings -->
+      <div
+        v-if="showSettings"
+        class="modal-backdrop"
+        @click.self="showSettings=false"
+      >
+        <div class="modal">
+          <div class="modal-head">
+            <h2>Receipt settings</h2>
+            <button class="btn small" @click="showSettings=false">✕</button>
+          </div>
+          <div class="modal-content">
+            <div class="form-grid">
+              <div class="field wide">
+                <label>LANDLORD / PROPERTY NAME</label
+                ><input
+                  v-model="settings.landlordName"
+                  placeholder="Your name or property name"
+                />
+              </div>
+              <div class="field wide">
+                <label>ADDRESS</label
+                ><textarea
+                  v-model="settings.address"
+                  placeholder="Property / landlord address"
+                ></textarea>
+              </div>
+              <div class="field wide">
+                <label>CONTACT NUMBER</label
+                ><input v-model="settings.phone" placeholder="Phone number" />
+              </div>
+            </div>
+            <div class="notice" style="margin-top: 14px">
+              These details appear on generated tenant receipts.
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" @click="showSettings=false">Close</button
+            ><button class="btn primary" @click="saveSettings">
+              Save details
+            </button>
+          </div>
+        </div>
+      </div>
+      <div v-if="toast" class="toast">{{toast}}</div>
+    </div>
+    <script>
+      const { createApp, ref, computed, watch } = Vue;
+      createApp({
+        setup() {
+          const months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+          const nav = [
+            { id: "dashboard", label: "Home", icon: "⌂" },
+            { id: "tenants", label: "Tenants", icon: "♙" },
+            { id: "ledger", label: "Ledger", icon: "▦" },
+            { id: "deposits", label: "Deposits", icon: "◇" },
+            { id: "receipts", label: "Receipts", icon: "▤" },
+          ];
+          const now = new Date(),
+            tab = ref("dashboard"),
+            month = ref(now.getMonth() + 1),
+            year = ref(now.getFullYear()),
+            matrixYear = ref(now.getFullYear()),
+            receiptMonth = ref(now.getMonth() + 1),
+            receiptYear = ref(now.getFullYear()),
+            receiptTenant = ref(""),
+            tenantSearch = ref("");
+          const tenants = ref([]),
+            rentRecords = ref([]),
+            settings = ref({ landlordName: "", address: "", phone: "" });
+          const tenantModal = ref(false),
+            tenantEditId = ref(null),
+            tenantForm = ref({
+              name: "",
+              unit: "",
+              phone: "",
+              rentAmount: 0,
+              depositAmount: 0,
+              depositReceived: 0,
+              moveInDate: "",
+              notes: "",
+            });
+          const paymentModal = ref(false),
+            paymentTarget = ref(null),
+            paymentMonth = ref(1),
+            paymentYear = ref(now.getFullYear()),
+            paymentForm = ref({
+              paid: 0,
+              date: "",
+              method: "UPI",
+              reference: "",
+              notes: "",
+            });
+          const depositModal = ref(false),
+            depositTarget = ref(null),
+            depositReceivedForm = ref(0),
+            showSettings = ref(false),
+            toast = ref("");
+          const greeting =
+            now.getHours() < 12
+              ? "morning"
+              : now.getHours() < 17
+                ? "afternoon"
+                : "evening";
+          const today = now.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          });
+          let toastTimer;
+          const notify = (s) => {
+            toast.value = s;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => (toast.value = ""), 2600);
+          };
+          const money = (n) =>
+            new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              maximumFractionDigits: 2,
+            }).format(Number(n) || 0);
+          const moneyShort = (n) => {
+            n = Number(n) || 0;
+            return n >= 100000
+              ? (n / 100000).toFixed(1) + "L"
+              : n >= 1000
+                ? (n / 1000).toFixed(1) + "k"
+                : String(Math.round(n));
+          };
+          const initials = (s) =>
+            String(s || "?")
+              .trim()
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((x) => x[0] || "")
+              .join("")
+              .toUpperCase();
+          const activeTenants = computed(() =>
+            tenants.value.filter((t) => t.active !== false),
+          );
+          const filteredTenants = computed(() =>
+            tenants.value.filter((t) =>
+              [t.name, t.unit, t.phone]
+                .join(" ")
+                .toLowerCase()
+                .includes(tenantSearch.value.toLowerCase()),
+            ),
+          );
+          const key = (id, m, y) => `${id}_${y}_${m}`;
+          const monthRecord = (id, m, y) =>
+            rentRecords.value.find(
+              (r) =>
+                r.tenantId === id &&
+                Number(r.month) === Number(m) &&
+                Number(r.year) === Number(y),
+            ) || { paid: 0, date: "", method: "", reference: "", notes: "" };
+          const statusClass = (paid, rent) =>
+            Number(paid) >= Number(rent) && Number(rent) > 0
+              ? "paid"
+              : Number(paid) > 0
+                ? "partial"
+                : "due";
+          const statusLabel = (paid, rent) =>
+            statusClass(paid, rent) === "paid"
+              ? "Paid"
+              : statusClass(paid, rent) === "partial"
+                ? "Partial"
+                : "Unpaid";
+          const statusShort = (paid, rent) =>
+            statusClass(paid, rent) === "paid"
+              ? "✓"
+              : statusClass(paid, rent) === "partial"
+                ? "◐"
+                : "—";
+          const monthStats = computed(() => {
+            let expected = 0,
+              collected = 0,
+              pendingCount = 0;
+            activeTenants.value.forEach((t) => {
+              expected += Number(t.rentAmount) || 0;
+              const p =
+                Number(monthRecord(t.id, month.value, year.value).paid) || 0;
+              collected += p;
+              if (p < Number(t.rentAmount || 0)) pendingCount++;
+            });
+            return {
+              expected,
+              collected,
+              outstanding: Math.max(0, expected - collected),
+              pendingCount,
+              percent: expected
+                ? Math.min(100, Math.round((collected / expected) * 100))
+                : 0,
+            };
+          });
+          const depositsHeld = computed(() =>
+            tenants.value.reduce(
+              (s, t) =>
+                s +
+                Math.min(
+                  Number(t.depositAmount) || 0,
+                  Number(t.depositReceived) || 0,
+                ),
+              0,
+            ),
+          );
+          const depositsPending = computed(() =>
+            tenants.value.reduce(
+              (s, t) =>
+                s +
+                Math.max(
+                  0,
+                  (Number(t.depositAmount) || 0) -
+                    (Number(t.depositReceived) || 0),
+                ),
+              0,
+            ),
+          );
+          const selectedReceiptTenant = computed(
+            () =>
+              tenants.value.find((t) => t.id === receiptTenant.value) || null,
+          );
+          // Carry-forward balance: all monthly rent from move-in month through the selected month, less all payments.
+          const receiptFigures = computed(() => {
+            const t = selectedReceiptTenant.value;
+            if (!t)
+              return { opening: 0, rent: 0, paid: 0, totalDue: 0, closing: 0 };
+            const end = receiptYear.value * 12 + receiptMonth.value - 1;
+            const start = t.moveInDate
+              ? (() => {
+                  const d = new Date(t.moveInDate + "T00:00:00");
+                  return d.getFullYear() * 12 + d.getMonth();
+                })()
+              : end;
+            let opening = 0;
+            for (let p = start; p < end; p++) {
+              const yy = Math.floor(p / 12),
+                mm = (p % 12) + 1;
+              opening = Math.max(
+                0,
+                opening +
+                  (Number(t.rentAmount) || 0) -
+                  Number(monthRecord(t.id, mm, yy).paid || 0),
+              );
+            }
+            const rent = Number(t.rentAmount) || 0,
+              paid =
+                Number(
+                  monthRecord(t.id, receiptMonth.value, receiptYear.value).paid,
+                ) || 0,
+              totalDue = opening + rent;
+            return {
+              opening,
+              rent,
+              paid,
+              totalDue,
+              closing: Math.max(0, totalDue - paid),
+            };
+          });
+          const receiptNumber = computed(
+            () =>
+              `RF-${receiptYear.value}${String(receiptMonth.value).padStart(2, "0")}-${String(receiptTenant.value || "").slice(-5)}`,
+          );
+          const openTenant = (t = null) => {
+            tenantEditId.value = t?.id || null;
+            tenantForm.value = t
+              ? { ...t }
+              : {
+                  name: "",
+                  unit: "",
+                  phone: "",
+                  rentAmount: 0,
+                  depositAmount: 0,
+                  depositReceived: 0,
+                  moveInDate: now.toISOString().slice(0, 10),
+                  notes: "",
+                };
+            tenantModal.value = true;
+          };
+          const saveTenant = () => {
+            if (
+              !tenantForm.value.name?.trim() ||
+              !tenantForm.value.unit?.trim() ||
+              Number(tenantForm.value.rentAmount) <= 0
+            ) {
+              notify("Enter tenant name, unit and a valid monthly rent.");
+              return;
+            }
+            if (tenantEditId.value) {
+              const i = tenants.value.findIndex(
+                (t) => t.id === tenantEditId.value,
+              );
+              if (i >= 0)
+                tenants.value[i] = {
+                  ...tenantForm.value,
+                  id: tenantEditId.value,
+                  active: tenants.value[i].active,
+                };
+            } else
+              tenants.value.push({
+                ...tenantForm.value,
+                id: crypto.randomUUID
+                  ? crypto.randomUUID()
+                  : String(Date.now()),
+                active: true,
+              });
+            save();
+            tenantModal.value = false;
+            notify("Tenant saved");
+          };
+          const toggleTenant = (t) => {
+            if (t.active === false) {
+              t.active = true;
+              notify("Tenant reactivated");
+            } else if (
+              confirm(
+                `Archive ${t.name}? Their payment history will be retained.`,
+              )
+            ) {
+              t.active = false;
+              notify("Tenant archived");
+            }
+            save();
+          };
+          const openPayment = (t, m, y) => {
+            paymentTarget.value = t;
+            paymentMonth.value = m;
+            paymentYear.value = y;
+            const r = monthRecord(t.id, m, y);
+            paymentForm.value = {
+              paid: Number(r.paid) || 0,
+              date: r.date || now.toISOString().slice(0, 10),
+              method: r.method || "UPI",
+              reference: r.reference || "",
+              notes: r.notes || "",
+            };
+            paymentModal.value = true;
+          };
+          const savePayment = () => {
+            const t = paymentTarget.value;
+            if (!t || Number(paymentForm.value.paid) < 0) {
+              notify("Enter a valid payment amount.");
+              return;
+            }
+            const i = rentRecords.value.findIndex(
+              (r) =>
+                r.tenantId === t.id &&
+                Number(r.month) === Number(paymentMonth.value) &&
+                Number(r.year) === Number(paymentYear.value),
+            );
+            const data = {
+              id: i >= 0 ? rentRecords.value[i].id : String(Date.now()),
+              tenantId: t.id,
+              month: Number(paymentMonth.value),
+              year: Number(paymentYear.value),
+              paid: Number(paymentForm.value.paid) || 0,
+              date: paymentForm.value.date,
+              method: paymentForm.value.method,
+              reference: paymentForm.value.reference,
+              notes: paymentForm.value.notes,
+            };
+            if (i >= 0) rentRecords.value[i] = data;
+            else rentRecords.value.push(data);
+            save();
+            paymentModal.value = false;
+            notify("Payment record saved");
+          };
+          const openDeposit = (t) => {
+            depositTarget.value = t;
+            depositReceivedForm.value = Number(t.depositReceived) || 0;
+            depositModal.value = true;
+          };
+          const saveDeposit = () => {
+            depositTarget.value.depositReceived = Math.max(
+              0,
+              Number(depositReceivedForm.value) || 0,
+            );
+            save();
+            depositModal.value = false;
+            notify("Deposit updated");
+          };
+          const save = () => {
+            localStorage.setItem(
+              "rentflow_v2_tenants",
+              JSON.stringify(tenants.value),
+            );
+            localStorage.setItem(
+              "rentflow_v2_payments",
+              JSON.stringify(rentRecords.value),
+            );
+            localStorage.setItem(
+              "rentflow_v2_settings",
+              JSON.stringify(settings.value),
+            );
+          };
+          const load = () => {
+            try {
+              let ts = localStorage.getItem("rentflow_v2_tenants"),
+                rs = localStorage.getItem("rentflow_v2_payments");
+              if (ts && rs) {
+                tenants.value = JSON.parse(ts);
+                rentRecords.value = JSON.parse(rs);
+              } else {
+                const oldT = localStorage.getItem("rentflow_tenants"),
+                  oldP = localStorage.getItem("rentflow_payments");
+                if (oldT && oldP) {
+                  tenants.value = JSON.parse(oldT).map((t) => ({
+                    ...t,
+                    depositReceived:
+                      t.depositReceived ??
+                      (t.depositStatus === "Paid" ? t.depositAmount : 0),
+                    active: t.active !== false,
+                  }));
+                  rentRecords.value = JSON.parse(oldP).map((r) => ({
+                    ...r,
+                    paid: Number(r.paid ?? r.paidAmount ?? r.amountPaid) || 0,
+                  }));
+                } else {
+                  const qT = localStorage.getItem("quasar_rent_tenants"),
+                    qL = localStorage.getItem("quasar_rent_ledger");
+                  if (qT) {
+                    tenants.value = JSON.parse(qT).map((t) => ({
+                      id: t.id,
+                      name: t.name,
+                      unit: t.unit,
+                      phone: t.phone || t.contact || "",
+                      rentAmount: Number(t.rentAmount ?? t.monthlyRent) || 0,
+                      depositAmount: Number(t.depositAmount) || 0,
+                      depositReceived:
+                        t.depositStatus === "Held"
+                          ? Number(t.depositAmount) || 0
+                          : 0,
+                      moveInDate: t.moveInDate || "",
+                      active: true,
+                    }));
+                    if (qL) {
+                      const l = JSON.parse(qL);
+                      rentRecords.value = Object.entries(l).map(([k, v]) => {
+                        const [tenantId, m, y] = k.split("_");
+                        return {
+                          id: k,
+                          tenantId,
+                          month: Number(m) + 1,
+                          year: Number(y),
+                          paid: Number(v.amountPaid) || 0,
+                          date: v.datePaid || "",
+                          method: v.method || "",
+                          notes: v.notes || "",
+                        };
+                      });
+                    }
+                  }
+                }
+                save();
+              }
+              const st = localStorage.getItem("rentflow_v2_settings");
+              if (st) settings.value = { ...settings.value, ...JSON.parse(st) };
+            } catch (e) {
+              console.error(e);
+              notify(
+                "Could not load saved data. Restore from a backup if needed.",
+              );
+            }
+          };
+          const exportData = () => {
+            const payload = {
+              app: "RentFlow",
+              version: 2,
+              exportedAt: new Date().toISOString(),
+              tenants: tenants.value,
+              rentRecords: rentRecords.value,
+              settings: settings.value,
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], {
+              type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `rentflow-backup-${now.toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            notify("Backup downloaded");
+          };
+          const importData = (e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const d = JSON.parse(reader.result);
+                if (!Array.isArray(d.tenants) || !Array.isArray(d.rentRecords))
+                  throw Error("Invalid backup");
+                if (
+                  !confirm(
+                    "Restore this backup? Current browser data will be replaced.",
+                  )
+                )
+                  return;
+                tenants.value = d.tenants;
+                rentRecords.value = d.rentRecords;
+                settings.value = { ...settings.value, ...(d.settings || {}) };
+                save();
+                notify("Backup restored");
+              } catch (err) {
+                notify("Invalid RentFlow backup file");
+              }
+              e.target.value = "";
+            };
+            reader.readAsText(f);
+          };
+          const saveSettings = () => {
+            save();
+            showSettings.value = false;
+            notify("Receipt details saved");
+          };
+          const printReceipt = () => window.print();
+          watch([month, year], () => {
+            receiptMonth.value = month.value;
+            receiptYear.value = year.value;
+          });
+          load();
+          return {
+            months,
+            nav,
+            tab,
+            month,
+            year,
+            matrixYear,
+            receiptMonth,
+            receiptYear,
+            receiptTenant,
+            tenantSearch,
+            tenants,
+            rentRecords,
+            settings,
+            tenantModal,
+            tenantEditId,
+            tenantForm,
+            paymentModal,
+            paymentTarget,
+            paymentMonth,
+            paymentYear,
+            paymentForm,
+            depositModal,
+            depositTarget,
+            depositReceivedForm,
+            showSettings,
+            toast,
+            greeting,
+            today,
+            activeTenants,
+            filteredTenants,
+            monthStats,
+            depositsHeld,
+            depositsPending,
+            selectedReceiptTenant,
+            receiptFigures,
+            receiptNumber,
+            openTenant,
+            saveTenant,
+            toggleTenant,
+            monthRecord,
+            statusClass,
+            statusLabel,
+            statusShort,
+            openPayment,
+            savePayment,
+            openDeposit,
+            saveDeposit,
+            saveSettings,
+            exportData,
+            importData,
+            printReceipt,
+            money,
+            moneyShort,
+            initials,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

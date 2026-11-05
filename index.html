@@ -1255,6 +1255,45 @@
             </div>
           </section>
 
+          <section v-if="tab==='reminders'">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">Rent collection</div>
+                <h1>WhatsApp balance reminders</h1>
+                <div class="sub">Select tenants and prepare individual messages for {{months[now.getMonth()]}} {{now.getFullYear()}}.</div>
+              </div>
+              <button class="btn primary" @click="openSelectedWhatsAppReminders">Open selected in WhatsApp</button>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Current month rent summary</h2>
+                <div class="toolbar">
+                  <button class="btn small" @click="selectDueReminderTenants">Select unpaid balances</button>
+                  <button class="btn small" @click="selectAllReminderTenants">Select all</button>
+                  <button class="btn small" @click="clearReminderSelection">Clear</button>
+                </div>
+              </div>
+              <div class="panel-body">
+                <p class="sub" style="margin-top:0">{{reminderSelectedCount}} tenant(s) selected. Each tenant opens as a separate pre-filled WhatsApp message. You must review and press Send in WhatsApp.</p>
+                <div v-if="currentMonthReminderRows.length" style="display:grid;gap:10px">
+                  <article class="tenant-card" v-for="t in currentMonthReminderRows" :key="t.id">
+                    <div style="display:flex;align-items:flex-start;gap:10px">
+                      <input type="checkbox" v-model="selectedReminderTenants" :value="t.id" style="width:18px;height:18px;margin-top:3px;accent-color:var(--blue)" />
+                      <div style="flex:1;min-width:0">
+                        <div class="tenant-card-top"><div><h3>{{t.name}}</h3><div class="unit">Unit {{t.unit}} · {{t.phone||'No phone number saved'}}</div></div><span class="pill" :class="t.balance>0?'partial':'paid'">{{t.balance>0?'Balance due':'Fully paid'}}</span></div>
+                        <div class="detail-line"><span>Rent</span><b>{{money(t.rent)}}</b></div>
+                        <div class="detail-line"><span>Already paid</span><b>{{money(t.paid)}}</b></div>
+                        <div class="detail-line"><span>Remaining balance</span><b :class="t.balance>0?'red':'green'">{{money(t.balance)}}</b></div>
+                        <div class="card-actions"><button class="btn small" @click="copyTenantReminder(t)">Copy message</button><button class="btn small primary" @click="openTenantWhatsApp(t)" :disabled="!t.phone">Open WhatsApp</button></div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+                <div v-else class="empty">♙<b>No active tenants yet</b>Add tenants to generate rent reminders.</div>
+              </div>
+            </div>
+          </section>
+
           <section v-if="tab==='ledger'">
             <div class="page-head">
               <div>
@@ -1360,6 +1399,57 @@
                         </button>
                       </td>
                     </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="tab==='transactions'">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">All payment entries</div>
+                <h1>Transaction history</h1>
+                <div class="sub">Every payment is listed separately, with its payment date and rent month.</div>
+              </div>
+              <button class="btn primary" @click="tab='ledger'">＋ Record payment</button>
+            </div>
+            <div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px">
+              <div class="stat"><div class="stat-top">Transactions shown</div><div class="stat-value">{{transactionHistory.length}}</div></div>
+              <div class="stat"><div class="stat-top">Total collected (filtered)</div><div class="stat-value">{{money(transactionTotal)}}</div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-body">
+                <div class="filters">
+                  <div class="field" style="min-width:170px;flex:1">
+                    <label>TENANT</label>
+                    <select v-model="transactionTenantFilter">
+                      <option value="all">All tenants</option>
+                      <option v-for="t in tenants" :key="t.id" :value="t.id">{{t.name}} · Unit {{t.unit}}</option>
+                    </select>
+                  </div>
+                  <div class="field"><label>FROM DATE</label><input type="date" v-model="transactionFromDate" /></div>
+                  <div class="field"><label>TO DATE</label><input type="date" v-model="transactionToDate" /></div>
+                  <button class="btn small" style="align-self:end" @click="transactionTenantFilter='all';transactionFromDate='';transactionToDate=''">Clear filters</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Payments</h2><span class="muted">Newest payment dates first</span></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Payment date</th><th>Tenant / unit</th><th>Rent month</th><th>Amount</th><th>Method</th><th>Reference / notes</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    <tr v-for="r in transactionHistory" :key="r.id">
+                      <td>{{r.date || '—'}}</td>
+                      <td><strong>{{tenantName(r.tenantId)}}</strong><br><span class="muted">Unit {{tenants.find(t=>t.id===r.tenantId)?.unit || '—'}}</span></td>
+                      <td>{{months[Number(r.month)-1] || '—'}} {{r.year}}</td>
+                      <td><strong>{{money(r.paid)}}</strong></td>
+                      <td>{{r.method || '—'}}</td>
+                      <td>{{r.reference || r.notes || '—'}}</td>
+                      <td><div style="display:flex;gap:6px"><button class="btn small" @click="editTransaction(r)">Edit</button><button class="btn small danger" @click="deleteTransaction(r)">Delete</button></div></td>
+                    </tr>
+                    <tr v-if="!transactionHistory.length"><td colspan="7"><div class="empty">No payment transactions match these filters.</div></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1578,8 +1668,7 @@
                 </div>
                 <div class="receipt-note">
                   Payment method:
-                  {{monthRecord(selectedReceiptTenant.id,receiptMonth,receiptYear).method||'unspecified'}}<br />Reference
-                  / note:
+                  {{monthRecord(selectedReceiptTenant.id,receiptMonth,receiptYear).method||'Not specified'}}<br />Reference / note:
                   {{monthRecord(selectedReceiptTenant.id,receiptMonth,receiptYear).notes||'—'}}
                 </div>
               </div>
@@ -1699,7 +1788,7 @@
         <div class="modal">
           <div class="modal-head">
             <div>
-              <h2>Record rent payment</h2>
+              <h2>{{paymentEditId ? 'Edit payment transaction' : 'Record rent payment'}}</h2>
               <div style="font-size: 11px; color: #c8d4f3; margin-top: 4px">
                 {{paymentTarget?.name}} · {{months[paymentMonth-1]}}
                 {{paymentYear}}
@@ -1709,8 +1798,8 @@
           </div>
           <div class="modal-content">
             <div class="notice">
-              Monthly rent: <b>{{money(paymentTarget?.rentAmount||0)}}</b> ·
-              Existing payment: <b>{{money(paymentForm.paid)}}</b>
+              Rent month: <b>{{months[paymentMonth-1]}} {{paymentYear}}</b> ·
+              Total received this month: <b>{{money(monthRecord(paymentTarget?.id,paymentMonth,paymentYear).paid)}}</b>
             </div>
             <div class="form-grid">
               <div class="field">
@@ -1760,9 +1849,9 @@
                 margin-top: 15px;
               "
             >
-              <span class="muted">Current month balance</span
+              <span class="muted">Remaining this month after this entry</span
               ><b class="red"
-                >{{money(Math.max(0,(paymentTarget?.rentAmount||0)-Number(paymentForm.paid||0)))}}</b
+                >{{money(paymentBalanceAfterEntry())}}</b
               >
             </div>
           </div>
@@ -1875,6 +1964,8 @@
             { id: "dashboard", label: "Home", icon: "⌂" },
             { id: "tenants", label: "Tenants", icon: "♙" },
             { id: "ledger", label: "Ledger", icon: "▦" },
+            { id: "transactions", label: "Transactions", icon: "↕" },
+            { id: "reminders", label: "WhatsApp Reminders", icon: "✉" },
             { id: "deposits", label: "Deposits", icon: "◇" },
             { id: "receipts", label: "Receipts", icon: "▤" },
           ];
@@ -1886,7 +1977,11 @@
             receiptMonth = ref(now.getMonth() + 1),
             receiptYear = ref(now.getFullYear()),
             receiptTenant = ref(""),
-            tenantSearch = ref("");
+            tenantSearch = ref(""),
+            transactionTenantFilter = ref("all"),
+            transactionFromDate = ref(""),
+            transactionToDate = ref(""),
+            selectedReminderTenants = ref([]);
           const tenants = ref([]),
             rentRecords = ref([]),
             settings = ref({ landlordName: "", address: "", phone: "" });
@@ -1903,6 +1998,7 @@
               notes: "",
             });
           const paymentModal = ref(false),
+            paymentEditId = ref(null),
             paymentTarget = ref(null),
             paymentMonth = ref(1),
             paymentYear = ref(now.getFullYear()),
@@ -1969,13 +2065,70 @@
             ),
           );
           const key = (id, m, y) => `${id}_${y}_${m}`;
-          const monthRecord = (id, m, y) =>
-            rentRecords.value.find(
-              (r) =>
-                r.tenantId === id &&
-                Number(r.month) === Number(m) &&
-                Number(r.year) === Number(y),
-            ) || { paid: 0, date: "", method: "", reference: "", notes: "" };
+          // A month can contain several separate payments. Older one-record-per-month
+          // data remains valid and is treated as one historical transaction.
+          const monthTransactions = (id, m, y) =>
+            rentRecords.value.filter(
+              (r) => r.tenantId === id && Number(r.month) === Number(m) && Number(r.year) === Number(y),
+            );
+          const monthRecord = (id, m, y) => {
+            const records = monthTransactions(id, m, y);
+            const latest = [...records].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0] || {};
+            return {
+              paid: records.reduce((sum, r) => sum + (Number(r.paid) || 0), 0),
+              date: latest.date || "",
+              method: latest.method || "",
+              reference: records.map(r => r.reference).filter(Boolean).join(", "),
+              notes: records.map(r => r.notes).filter(Boolean).join("; "),
+            };
+          };
+          const tenantName = (id) => tenants.value.find(t => t.id === id)?.name || "Unknown tenant";
+          const currentMonthReminderRows = computed(() => activeTenants.value.map(t => {
+            const paid = monthRecord(t.id, now.getMonth() + 1, now.getFullYear()).paid;
+            const rent = Number(t.rentAmount) || 0;
+            return { ...t, rent, paid, balance: Math.max(0, rent - paid) };
+          }));
+          const reminderSelectedCount = computed(() => selectedReminderTenants.value.length);
+          const selectDueReminderTenants = () => {
+            selectedReminderTenants.value = currentMonthReminderRows.value
+              .filter(t => t.balance > 0).map(t => t.id);
+          };
+          const selectAllReminderTenants = () => {
+            selectedReminderTenants.value = currentMonthReminderRows.value.map(t => t.id);
+          };
+          const clearReminderSelection = () => { selectedReminderTenants.value = []; };
+          const reminderMessage = (t) => {
+            const monthLabel = months[now.getMonth()] + " " + now.getFullYear();
+            return `Hi ${t.name},\n\nHere is your rent summary for ${monthLabel}:\n\nMonthly Rent: ${money(t.rent)}\nAlready Paid: ${money(t.paid)}\nRemaining Balance: ${money(t.balance)}\n\nKindly pay the remaining balance at the earliest.\n\nThank you.`;
+          };
+          const openTenantWhatsApp = (t) => {
+            const phone = String(t.phone || "").replace(/\D/g, "");
+            const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(reminderMessage(t));
+            window.open(url, "_blank", "noopener,noreferrer");
+          };
+          const copyTenantReminder = async (t) => {
+            try { await navigator.clipboard.writeText(reminderMessage(t)); notify("Message copied for " + t.name); }
+            catch (e) { notify("Clipboard unavailable. Open WhatsApp to send the message."); }
+          };
+          const openSelectedWhatsAppReminders = () => {
+            const chosen = currentMonthReminderRows.value.filter(t => selectedReminderTenants.value.includes(t.id));
+            if (!chosen.length) { notify("Select at least one tenant"); return; }
+            chosen.forEach((t, i) => setTimeout(() => openTenantWhatsApp(t), i * 350));
+          };
+          const transactionHistory = computed(() => rentRecords.value
+            .filter(r => transactionTenantFilter.value === "all" || r.tenantId === transactionTenantFilter.value)
+            .filter(r => !transactionFromDate.value || String(r.date || "") >= transactionFromDate.value)
+            .filter(r => !transactionToDate.value || String(r.date || "") <= transactionToDate.value)
+            .slice().sort((a,b) => String(b.date || "").localeCompare(String(a.date || "")) || String(b.id).localeCompare(String(a.id))));
+          const transactionTotal = computed(() => transactionHistory.value.reduce((sum, r) => sum + (Number(r.paid) || 0), 0));
+          const paymentBalanceAfterEntry = () => {
+            const t = paymentTarget.value;
+            if (!t) return 0;
+            const currentTotal = monthRecord(t.id, paymentMonth.value, paymentYear.value).paid;
+            const oldAmount = paymentEditId.value ? (Number(rentRecords.value.find(r => r.id === paymentEditId.value)?.paid) || 0) : 0;
+            const afterEntry = currentTotal - oldAmount + (Number(paymentForm.value.paid) || 0);
+            return Math.max(0, (Number(t.rentAmount) || 0) - afterEntry);
+          };
           const statusClass = (paid, rent) =>
             Number(paid) >= Number(rent) && Number(rent) > 0
               ? "paid"
@@ -2148,7 +2301,23 @@
             paymentTarget.value = t;
             paymentMonth.value = m;
             paymentYear.value = y;
-            const r = monthRecord(t.id, m, y);
+            paymentEditId.value = null;
+            paymentForm.value = {
+              paid: 0,
+              date: now.toISOString().slice(0, 10),
+              method: "UPI",
+              reference: "",
+              notes: "",
+            };
+            paymentModal.value = true;
+          };
+          const editTransaction = (r) => {
+            const t = tenants.value.find(x => x.id === r.tenantId);
+            if (!t) { notify("Tenant not found for this transaction."); return; }
+            paymentTarget.value = t;
+            paymentMonth.value = Number(r.month);
+            paymentYear.value = Number(r.year);
+            paymentEditId.value = r.id;
             paymentForm.value = {
               paid: Number(r.paid) || 0,
               date: r.date || now.toISOString().slice(0, 10),
@@ -2160,32 +2329,40 @@
           };
           const savePayment = () => {
             const t = paymentTarget.value;
-            if (!t || Number(paymentForm.value.paid) < 0) {
-              notify("Enter a valid payment amount.");
+            const amount = Number(paymentForm.value.paid);
+            if (!t || !Number.isFinite(amount) || amount <= 0 || !paymentForm.value.date) {
+              notify("Enter a valid amount greater than zero and a payment date.");
               return;
             }
-            const i = rentRecords.value.findIndex(
-              (r) =>
-                r.tenantId === t.id &&
-                Number(r.month) === Number(paymentMonth.value) &&
-                Number(r.year) === Number(paymentYear.value),
-            );
             const data = {
-              id: i >= 0 ? rentRecords.value[i].id : String(Date.now()),
+              id: paymentEditId.value || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)),
               tenantId: t.id,
               month: Number(paymentMonth.value),
               year: Number(paymentYear.value),
-              paid: Number(paymentForm.value.paid) || 0,
+              paid: amount,
               date: paymentForm.value.date,
               method: paymentForm.value.method,
               reference: paymentForm.value.reference,
               notes: paymentForm.value.notes,
             };
-            if (i >= 0) rentRecords.value[i] = data;
-            else rentRecords.value.push(data);
+            if (paymentEditId.value) {
+              const i = rentRecords.value.findIndex(r => r.id === paymentEditId.value);
+              if (i >= 0) rentRecords.value[i] = data;
+              else rentRecords.value.push(data);
+            } else {
+              rentRecords.value.push(data);
+            }
             save();
             paymentModal.value = false;
-            notify("Payment record saved");
+            paymentEditId.value = null;
+            notify("Payment transaction saved");
+          };
+          const deleteTransaction = (r) => {
+            const label = `${tenantName(r.tenantId)} · ${money(r.paid)} · ${r.date || "date not set"}`;
+            if (!confirm(`Permanently delete this payment transaction?\n${label}`)) return;
+            rentRecords.value = rentRecords.value.filter(x => x.id !== r.id);
+            save();
+            notify("Transaction deleted");
           };
           const openDeposit = (t) => {
             depositTarget.value = t;
@@ -2287,7 +2464,7 @@
           const exportData = () => {
             const payload = {
               app: "RentFlow",
-              version: 2,
+              version: 3,
               exportedAt: new Date().toISOString(),
               tenants: tenants.value,
               rentRecords: rentRecords.value,
@@ -2353,6 +2530,22 @@
             receiptYear,
             receiptTenant,
             tenantSearch,
+            transactionTenantFilter,
+            transactionFromDate,
+            transactionToDate,
+            currentMonthReminderRows,
+            selectedReminderTenants,
+            reminderSelectedCount,
+            selectDueReminderTenants,
+            selectAllReminderTenants,
+            clearReminderSelection,
+            openSelectedWhatsAppReminders,
+            openTenantWhatsApp,
+            copyTenantReminder,
+            transactionHistory,
+            transactionTotal,
+            paymentBalanceAfterEntry,
+            tenantName,
             tenants,
             rentRecords,
             settings,
@@ -2360,6 +2553,7 @@
             tenantEditId,
             tenantForm,
             paymentModal,
+            paymentEditId,
             paymentTarget,
             paymentMonth,
             paymentYear,
@@ -2371,6 +2565,7 @@
             toast,
             greeting,
             today,
+            now,
             activeTenants,
             filteredTenants,
             monthStats,
@@ -2388,6 +2583,8 @@
             statusShort,
             openPayment,
             savePayment,
+            editTransaction,
+            deleteTransaction,
             openDeposit,
             saveDeposit,
             saveSettings,
